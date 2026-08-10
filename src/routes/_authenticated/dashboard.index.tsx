@@ -15,6 +15,10 @@ export const Route = createFileRoute("/_authenticated/dashboard/")({
 function DashboardOverview() {
 	const user = useQuery(api.users.current);
 	const projects = useQuery(api.projects.list);
+	const projectCount =
+		projects === undefined
+			? "—"
+			: `${projects.projects.length}${projects.hasMore ? "+" : ""}`;
 
 	return (
 		<div className="space-y-6">
@@ -33,7 +37,7 @@ function DashboardOverview() {
 						<CardHeader>
 							<CardDescription>Projects</CardDescription>
 							<CardTitle className="text-3xl tabular-nums">
-								{projects === undefined ? "—" : projects.length}
+								{projectCount}
 							</CardTitle>
 						</CardHeader>
 					</Card>

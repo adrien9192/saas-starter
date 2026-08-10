@@ -6,6 +6,20 @@
  * the client import only keeps the UI honest.
  */
 
+/**
+ * Rows returned by `projects.list` in one call.
+ *
+ * The table filters and sorts on the client, which is the right trade for a
+ * few hundred rows and keeps search instant. It also means the page must hold
+ * every row it claims to search — so instead of truncating in silence, the
+ * query reports `hasMore` and the UI says so out loud.
+ *
+ * Past this point, move filtering and sorting into Convex and switch to
+ * `.paginate()`. Doing it earlier would make search silently partial, which is
+ * a worse bug than the one it fixes.
+ */
+export const PROJECT_LIST_LIMIT = 200;
+
 export const PROJECT_NAME_MIN_LENGTH = 1;
 export const PROJECT_NAME_MAX_LENGTH = 80;
 

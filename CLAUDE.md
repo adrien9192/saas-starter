@@ -67,6 +67,12 @@ the repo.
 - Use `pnpm convex` codegen; never hand-edit `convex/_generated/`.
 - The MCP server is wired to the **dev** deployment only. Production is never
   modified without an explicit request.
+- **One Convex MCP, not two.** `.mcp.json` in this repo registers `convex`
+  pinned to `--deployment dev`. The official Convex Claude Code plugin
+  registers its own `convex` server *without* that pin, so having both gives
+  you duplicated tools, one of which is not dev-restricted. If the plugin is
+  installed (`claude mcp list` shows `plugin:convex:convex`), delete
+  `.mcp.json`; otherwise keep it and do not install the plugin's MCP.
 
 # Auth
 

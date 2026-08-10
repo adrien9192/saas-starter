@@ -37,11 +37,7 @@
     "email": "email dev --dir emails --port 3001"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.36",
-    "@ai-sdk/google": "^4.0.39",
-    "@ai-sdk/openai": "^4.0.36",
     "@clerk/tanstack-react-start": "^1.4.29",
-    "@openrouter/ai-sdk-provider": "^3.0.0",
     "@sentry/tanstackstart-react": "^10.69.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-devtools": "^0.10.9",
@@ -50,7 +46,6 @@
     "@tanstack/react-router-devtools": "^1.167.1",
     "@tanstack/react-start": "^1.168.42",
     "@tanstack/react-table": "^9.1.2",
-    "ai": "^7.0.58",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.43.0",

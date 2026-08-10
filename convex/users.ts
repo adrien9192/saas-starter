@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { getCurrentUser, requireIdentity } from "./model/auth";
+import { upsertUser } from "./model/users";
 
 const userFields = {
 	_id: v.id("users"),
@@ -21,39 +22,16 @@ export const current = query({
 /**
  * Creates or refreshes the caller's row from their JWT claims.
  *
- * Idempotent, and safe to call on every app load. Every field written here
- * comes from the verified identity — never from a client argument.
+ * Idempotent and safe on every app load. It is an optimisation, not a
+ * prerequisite: authenticated mutations provision the row themselves through
+ * `requireUser`, so nothing races on this landing first.
  */
 export const ensureCurrent = mutation({
 	args: {},
 	returns: v.id("users"),
 	handler: async (ctx) => {
 		const identity = await requireIdentity(ctx);
-		const profile = {
-			email: identity.email,
-			name: identity.name ?? identity.nickname ?? identity.preferredUsername,
-			imageUrl: identity.pictureUrl,
-		};
-
-		const existing = await ctx.db
-			.query("users")
-			.withIndex("by_token_identifier", (q) =>
-				q.eq("tokenIdentifier", identity.tokenIdentifier),
-			)
-			.unique();
-
-		if (existing !== null) {
-			const isStale =
-				existing.email !== profile.email ||
-				existing.name !== profile.name ||
-				existing.imageUrl !== profile.imageUrl;
-			if (isStale) await ctx.db.patch("users", existing._id, profile);
-			return existing._id;
-		}
-
-		return await ctx.db.insert("users", {
-			tokenIdentifier: identity.tokenIdentifier,
-			...profile,
-		});
+		const user = await upsertUser(ctx, identity);
+		return user._id;
 	},
 });

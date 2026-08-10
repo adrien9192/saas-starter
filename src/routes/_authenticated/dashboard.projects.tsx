@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/projects")({
 function ProjectsPage() {
 	// Convex subscribes over a websocket: another tab creating a project updates
 	// this list without a refetch. `undefined` means "still loading".
-	const projects = useQuery(api.projects.list);
+	const page = useQuery(api.projects.list);
 
 	return (
 		<div className="space-y-6">
@@ -25,7 +25,10 @@ function ProjectsPage() {
 				<CreateProjectDialog />
 			</header>
 
-			<ProjectsTable projects={projects} />
+			<ProjectsTable
+				projects={page?.projects}
+				hasMore={page?.hasMore ?? false}
+			/>
 		</div>
 	);
 }

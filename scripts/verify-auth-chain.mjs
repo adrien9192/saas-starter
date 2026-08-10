@@ -102,17 +102,17 @@ try {
   createdProjectId = await aliceClient.mutation("projects:create", { name: "  Live   check  " });
   check(
     "create + whitespace normalisation",
-    (await aliceClient.query("projects:list", {})).some((p) => p.name === "Live check"),
+    (await aliceClient.query("projects:list", {})).projects.some((p) => p.name === "Live check"),
   );
 
   await aliceClient.mutation("projects:rename", { projectId: createdProjectId, name: "Renamed" });
   check(
     "owner can rename",
-    (await aliceClient.query("projects:list", {})).some((p) => p.name === "Renamed"),
+    (await aliceClient.query("projects:list", {})).projects.some((p) => p.name === "Renamed"),
   );
 
   // 3. Cross-tenant isolation, on the real deployment.
-  const bobList = await bobClient.query("projects:list", {});
+  const bobList = (await bobClient.query("projects:list", {})).projects;
   check(
     "bob does not see alice's project",
     !bobList.some((p) => p._id === createdProjectId),
@@ -137,7 +137,7 @@ try {
 
   check(
     "alice's project survived both attempts",
-    (await aliceClient.query("projects:list", {})).some((p) => p._id === createdProjectId),
+    (await aliceClient.query("projects:list", {})).projects.some((p) => p._id === createdProjectId),
   );
 
   // 4. Validation is server-side, not just in the form.

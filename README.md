@@ -163,6 +163,27 @@ Smoke specs always run. The authenticated specs need a Clerk test account in
 `E2E_CLERK_USER_EMAIL` / `E2E_CLERK_USER_PASSWORD`, and skip themselves with a
 clear message otherwise.
 
+## Claude Code
+
+The repo is set up so an agent cannot guess at TanStack APIs:
+
+- `.claude/settings.json` runs `.intent/hooks/intent-claude-gate.mjs` on
+  `PreToolUse` and **denies** an edit until a TanStack skill has been loaded in
+  the session. One `intent load …` opens the gate.
+- `AGENTS.md` carries the generated skill mappings; `pnpm exec intent list`
+  shows the 58 skills that ship with the installed packages.
+- `.mcp.json` registers the Convex MCP server, pinned to the **dev**
+  deployment.
+
+> **If you use the official Convex Claude Code plugin, delete `.mcp.json`.**
+> The plugin registers its own `convex` MCP server without the `--deployment
+> dev` pin. Running both gives duplicated tools, one of them unrestricted.
+> Check with `claude mcp list`: seeing both `convex` and
+> `plugin:convex:convex` means you have the duplicate.
+
+Convex's agent skills live in `.claude/skills/` and `.agents/`. They are
+generated — refresh them with `npx convex ai-files install`.
+
 ## Architecture
 
 See [docs/architecture.md](docs/architecture.md) for the request paths, the

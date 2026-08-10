@@ -10,7 +10,11 @@ import { defineConfig } from "vite";
 const config = defineConfig({
 	resolve: { tsconfigPaths: true },
 	plugins: [
-		devtools(),
+		// `removeDevtoolsOnBuild` already defaults to true, but a starter should not
+		// leave "no devtools panel in production" to a default it does not state.
+		// Verified on a production build: zero occurrences of `TanStackDevtools`
+		// or `@tanstack/react-devtools` in .output/public.
+		devtools({ removeDevtoolsOnBuild: true }),
 		nitro({ rollupConfig: { external: [/^@sentry\//] } }),
 		tailwindcss(),
 		tanstackStart(),

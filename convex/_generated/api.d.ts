@@ -9,9 +9,9 @@
  */
 
 import type * as emails from "../emails.js";
-import type * as model_ai from "../model/ai.js";
 import type * as model_auth from "../model/auth.js";
 import type * as model_projects from "../model/projects.js";
+import type * as model_users from "../model/users.js";
 import type * as projects from "../projects.js";
 import type * as users from "../users.js";
 
@@ -23,9 +23,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   emails: typeof emails;
-  "model/ai": typeof model_ai;
   "model/auth": typeof model_auth;
   "model/projects": typeof model_projects;
+  "model/users": typeof model_users;
   projects: typeof projects;
   users: typeof users;
 }>;

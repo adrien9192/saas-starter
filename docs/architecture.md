@@ -98,25 +98,61 @@ Steps: `pnpm add stripe`, add `convex/http.ts`, add the fields to `users` (or a
 `subscriptions` table), set `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` on
 the deployment.
 
-## AI
+## AI (prepared, not installed)
 
-`convex/model/ai.ts` maps `"anthropic:claude-sonnet-4-5"` to a configured AI SDK
-model. Providers are Anthropic, OpenAI, Google and OpenRouter; adding one is a
-single entry. Keys live on the Convex deployment, so no key ever reaches the
-browser, and `resolveModel` throws a message naming the exact missing variable.
+Same rule as Stripe: no dependency until a feature needs one. `ai` plus four
+provider adapters is five packages to keep upgraded for a CRM that may never
+call a model.
+
+When an AI feature arrives:
+
+```bash
+pnpm add ai @ai-sdk/anthropic          # plus @ai-sdk/openai, @ai-sdk/google,
+                                       # @openrouter/ai-sdk-provider as needed
+```
+
+Then `convex/model/ai.ts`, which maps `"anthropic:claude-sonnet-4-5"` to a
+configured model. Adding a provider is one entry:
+
+```ts
+import { createAnthropic } from "@ai-sdk/anthropic";
+import type { LanguageModel } from "ai";
+import { env } from "../_generated/server";
+
+const PROVIDERS = {
+  anthropic: {
+    envName: "ANTHROPIC_API_KEY",
+    apiKey: () => env.ANTHROPIC_API_KEY,
+    create: (apiKey: string) => createAnthropic({ apiKey }),
+  },
+  // openai, google, openrouter follow the same three fields.
+};
+
+export function resolveModel(reference: string): LanguageModel {
+  const separator = reference.indexOf(":");
+  if (separator === -1) throw new Error(`Expected "<provider>:<model>".`);
+  const provider = PROVIDERS[reference.slice(0, separator)];
+  if (!provider) throw new Error(`Unknown provider.`);
+  const apiKey = provider.apiKey();
+  if (!apiKey) {
+    throw new Error(`${provider.envName} is not set. pnpm convex env set …`);
+  }
+  return provider.create(apiKey)(reference.slice(separator + 1));
+}
+```
+
+The keys are already declared in `convex/convex.config.ts`, so `env` types them
+the moment you use them, and none of them ever reaches the browser.
 
 AI calls belong in Convex actions: they need secrets, they are slow, and they
-usually want scheduling or retries.
-
-There is no abstraction layer over the AI SDK. The AI SDK is already the
-abstraction layer.
+usually want scheduling or retries. There is no abstraction layer over the AI
+SDK — the AI SDK is already the abstraction layer.
 
 **Usage accounting, when a feature exists.** `generateText` returns
 `usage.inputTokens` / `usage.outputTokens`. Write one row per call into an
 `aiUsage` table — `userId`, `feature`, `provider`, `model`, token counts,
 estimated cost, `_creationTime` — from the same action that made the call.
 Aggregate with `@convex-dev/aggregate` if per-user totals ever need to be fast.
-Not built now: there is no AI feature to meter.
 
 **Agents, when they are needed.** `@convex-dev/agent` is the first choice for
 persistent threads, tool calls and conversational memory — not a hand-rolled
@@ -160,6 +196,7 @@ and loses quota when a mutation fails.
 | S3, R2, UploadThing | Convex File Storage covers uploads and signed URLs. Revisit for heavy media. | `ctx.storage` |
 | Redux, Zustand | Server state is Convex's; the remaining UI state is component-local. | `useState`, URL search params |
 | Storybook, Turborepo, Nx | One app, one package. | — |
+| `ai` + provider adapters | Five packages to upgrade for a product that may never call a model. The registry is 30 lines, above. | `pnpm add ai @ai-sdk/…` when a feature needs it |
 
 Each row is a decision that can be revisited with evidence. None of them should
 be revisited by default.

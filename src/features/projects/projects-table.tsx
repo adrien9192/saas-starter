@@ -96,8 +96,11 @@ const NO_PROJECTS: Array<Project> = [];
 
 export function ProjectsTable({
 	projects,
+	hasMore = false,
 }: {
 	projects: Array<Project> | undefined;
+	/** The backend had more rows than it returned. Never hide this. */
+	hasMore?: boolean;
 }) {
 	const [globalFilter, setGlobalFilter] = useState("");
 
@@ -129,7 +132,7 @@ export function ProjectsTable({
 				<p className="text-sm text-muted-foreground" aria-live="polite">
 					{isLoading
 						? "Loading…"
-						: `${rows.length} of ${projects.length} project${projects.length === 1 ? "" : "s"}`}
+						: `${rows.length} of ${projects.length}${hasMore ? "+" : ""} project${projects.length === 1 ? "" : "s"}`}
 				</p>
 			</div>
 
@@ -199,6 +202,15 @@ export function ProjectsTable({
 					</TableBody>
 				</Table>
 			</div>
+
+			{hasMore ? (
+				<output className="block rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground">
+					Showing the {projects?.length} most recently updated projects. There
+					are more — search and sorting only cover the rows listed here. Move
+					filtering and sorting into Convex and switch to{" "}
+					<code>.paginate()</code> before you rely on this view.
+				</output>
+			) : null}
 		</div>
 	);
 }

@@ -8,12 +8,10 @@ import {
 } from "./model/auth";
 import {
 	normalizeProjectName,
+	PROJECT_LIST_LIMIT,
 	projectNameErrorMessage,
 	validateProjectName,
 } from "./model/projects";
-
-/** Ceiling on a single page of projects. Past this the UI must paginate. */
-const LIST_LIMIT = 200;
 
 const projectObject = v.object({
 	_id: v.id("projects"),
@@ -32,24 +30,34 @@ function assertValidName(raw: string): string {
 }
 
 /**
- * The caller's projects, newest first.
+ * The caller's projects, newest first, with an explicit truncation flag.
  *
- * Returns `[]` rather than throwing when signed out: this query runs during the
- * sign-out transition, and an empty list is the honest answer for "no identity".
- * It cannot leak anything — the owner filter is an index range on the caller's
- * own `_id`.
+ * Returns an empty page rather than throwing when signed out: this query runs
+ * during the sign-out transition, and "no identity, no rows" is the honest
+ * answer. It cannot leak anything — the owner filter is an index range on the
+ * caller's own `_id`.
  */
 export const list = query({
 	args: {},
-	returns: v.array(projectObject),
+	returns: v.object({
+		projects: v.array(projectObject),
+		hasMore: v.boolean(),
+	}),
 	handler: async (ctx) => {
 		const user = await getCurrentUser(ctx);
-		if (user === null) return [];
-		return await ctx.db
+		if (user === null) return { projects: [], hasMore: false };
+
+		// One extra row is the cheapest way to know whether the page is complete.
+		const rows = await ctx.db
 			.query("projects")
 			.withIndex("by_owner", (q) => q.eq("ownerId", user._id))
 			.order("desc")
-			.take(LIST_LIMIT);
+			.take(PROJECT_LIST_LIMIT + 1);
+
+		return {
+			projects: rows.slice(0, PROJECT_LIST_LIMIT),
+			hasMore: rows.length > PROJECT_LIST_LIMIT,
+		};
 	},
 });
 

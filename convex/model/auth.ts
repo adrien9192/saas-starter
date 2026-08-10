@@ -1,6 +1,7 @@
 import { ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { findUserByToken, upsertUser } from "./users";
 
 /**
  * Authorization helpers. Every public Convex function that touches user data
@@ -34,38 +35,27 @@ export async function requireIdentity(ctx: QueryCtx | MutationCtx) {
 	return identity;
 }
 
-/** The `users` row for the caller, or `null` when signed out / not provisioned. */
+/** The `users` row for the caller, or `null` when signed out / not yet written. */
 export async function getCurrentUser(
 	ctx: QueryCtx | MutationCtx,
 ): Promise<Doc<"users"> | null> {
 	const identity = await ctx.auth.getUserIdentity();
 	if (identity === null) return null;
-	return await ctx.db
-		.query("users")
-		.withIndex("by_token_identifier", (q) =>
-			q.eq("tokenIdentifier", identity.tokenIdentifier),
-		)
-		.unique();
+	return await findUserByToken(ctx, identity.tokenIdentifier);
 }
 
-/** The `users` row for the caller. Throws when signed out. */
-export async function requireUser(
-	ctx: QueryCtx | MutationCtx,
-): Promise<Doc<"users">> {
+/**
+ * The `users` row for the caller, creating it if this is their first write.
+ *
+ * Mutation-only by design. Provisioning here removes the startup race: a user
+ * who signs in and immediately clicks "create" does not depend on a separate
+ * bootstrap mutation having already landed. `users.ensureCurrent` remains
+ * useful — it fills the profile early and keeps it fresh — but nothing is
+ * broken if it has not run yet.
+ */
+export async function requireUser(ctx: MutationCtx): Promise<Doc<"users">> {
 	const identity = await requireIdentity(ctx);
-	const user = await ctx.db
-		.query("users")
-		.withIndex("by_token_identifier", (q) =>
-			q.eq("tokenIdentifier", identity.tokenIdentifier),
-		)
-		.unique();
-	if (user === null) {
-		throw appError(
-			"UNAUTHENTICATED",
-			"Your profile has not been provisioned yet.",
-		);
-	}
-	return user;
+	return await upsertUser(ctx, identity);
 }
 
 /**
