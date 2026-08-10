@@ -1,0 +1,34 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
+	"vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+	"files": {
+		"includes": [
+			"**/src/**/*",
+			"**/convex/**/*",
+			"**/emails/**/*",
+			"**/e2e/**/*",
+			"**/*.config.ts",
+			"!**/src/routeTree.gen.ts",
+			"!**/convex/_generated",
+			"!**/src/styles.css"
+		]
+	},
+	"formatter": { "enabled": true, "indentStyle": "tab" },
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"correctness": {
+				"useExhaustiveDependencies": "error",
+				"useHookAtTopLevel": "error"
+			},
+			"suspicious": { "noExplicitAny": "error" },
+			"style": {
+				"noNonNullAssertion": "error",
+				"useConst": "error"
+			}
+		}
+	},
+	"javascript": { "formatter": { "quoteStyle": "double" } }
+}

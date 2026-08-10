@@ -1,0 +1,21 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+.output
+.nitro
+.tanstack
+.vinxi
+.wrangler
+__unconfig*
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Test and build artifacts
+coverage
+playwright-report
+test-results
+.playwright

@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "convex": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "convex@latest",
+        "mcp",
+        "start",
+        "--project-dir",
+        ".",
+        "--deployment",
+        "dev"
+      ],
+      "env": {}
+    }
+  }
+}
